@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import EditorModule from 'react-simple-code-editor'; // Načítame ako modul
+import EditorModule from 'react-simple-code-editor';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-matlab'; // Octave/Matlab syntax
-import 'prismjs/themes/prism-tomorrow.css'; // Pekná tmavá téma pre kód
+import 'prismjs/components/prism-matlab';
+import 'prismjs/themes/prism-tomorrow.css';
 
-// OŠETRENIE VITE INTEROP: Ak Vite naimportoval objekt, vytiahneme z neho .default komponent
 const Editor = EditorModule.default || EditorModule;
+
+const apiHeaders = {
+  'X-API-KEY': import.meta.env.VITE_API_KEY,
+  'Content-Type': 'application/json',
+};
 
 const ConsolePage = ({ t }) => {
   const [command, setCommand] = useState('');
@@ -14,35 +18,23 @@ const ConsolePage = ({ t }) => {
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
 
-  // Vygenerovanie alebo načítanie unikátnego ID relácie pre pamäť premenných
   useEffect(() => {
     let sId = sessionStorage.getItem('cas_session_id');
     if (!sId) {
-      // OPRAVENÉ: Správne spojenie textových reťazcov pomocou +
       sId = 'sess_' + Math.random().toString(36).substring(2, 9);
       sessionStorage.setItem('cas_session_id', sId);
     }
     setSessionId(sId);
   }, []);
 
-  // Konfigurácia hlavičiek pre Axios (API kľúč sa posiela bezpečne)
-  const apiConfig = {
-    headers: {
-      'X-API-KEY': 'moje_supertajne_api_heslo_123', // Musí sedieť s CAS_API_KEY v .env na backende
-      'Content-Type': 'application/json'
-    }
-  };
-
   const handleExecute = async () => {
     if (!command.trim()) return;
     setLoading(true);
-
     try {
-      const response = await axios.post('http://localhost:8080/api/cas/execute', {
-        command: command,
-        session_id: sessionId
-      }, apiConfig);
-
+      const response = await axios.post('/api/cas/execute', {
+        command,
+        session_id: sessionId,
+      }, { headers: apiHeaders });
       setOutput(prev => prev + `\n>> ${command}\n${response.data.output}`);
       setCommand('');
     } catch (error) {
@@ -55,26 +47,38 @@ const ConsolePage = ({ t }) => {
 
   const handleClearMemory = async () => {
     try {
-      await axios.post('http://localhost:8080/api/cas/clear', { session_id: sessionId }, apiConfig);
+      await axios.post('/api/cas/clear', { session_id: sessionId }, { headers: apiHeaders });
       setOutput(prev => prev + '\n\n[Systém]: Pamäť premenných v Octave bola resetovaná.');
-    } catch (error) {
+    } catch {
       alert('Nepodarilo sa vymazať pamäť.');
     }
   };
 
-  const handleDownloadCsv = () => {
-    window.open('http://localhost:8080/api/cas/export', '_blank');
+  const handleDownloadCsv = async () => {
+    try {
+      const response = await fetch('/api/cas/export', { headers: { 'X-API-KEY': import.meta.env.VITE_API_KEY } });
+      if (!response.ok) throw new Error();
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cas_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Export sa nepodaril.');
+    }
   };
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>{t.console}</h2>
-        <button 
+        <button
           onClick={handleDownloadCsv}
           style={{ padding: '8px 15px', backgroundColor: '#008CBA', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
         >
-          📥 Exportovať CSV logy
+          Exportovať CSV logy
         </button>
       </div>
 
@@ -87,24 +91,19 @@ const ConsolePage = ({ t }) => {
           highlight={code => Prism.highlight(code, Prism.languages.matlab, 'matlab')}
           padding={15}
           placeholder={t.placeholder}
-          style={{
-            fontFamily: '"Fira code", "Fira Mono", monospace',
-            fontSize: 16,
-            minHeight: '120px',
-            color: '#ccc'
-          }}
+          style={{ fontFamily: '"Fira code", "Fira Mono", monospace', fontSize: 16, minHeight: '120px', color: '#ccc' }}
         />
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button 
-          onClick={handleExecute} 
+        <button
+          onClick={handleExecute}
           disabled={loading}
           style={{ padding: '10px 20px', cursor: loading ? 'not-allowed' : 'pointer', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
         >
           {loading ? 'Počíta sa...' : t.execute}
         </button>
-        <button 
+        <button
           onClick={handleClearMemory}
           style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
         >

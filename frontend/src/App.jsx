@@ -18,8 +18,8 @@ function App() {
         
         <Routes>
           <Route path="/" element={<ConsolePage t={t} />} />
-          <Route path="/pendulum" element={<SimulationPage title={t.pendulum} t={t} />} />
-          <Route path="/ball-beam" element={<SimulationPage title={t.ball_beam} t={t} />} />
+          <Route path="/pendulum" element={<SimulationPage simType="pendulum" t={t} />} />
+          <Route path="/ball-beam" element={<SimulationPage simType="ball-beam" t={t} />} />
           <Route path="/stats" element={<StatsPage t={t} />} />
           <Route path="/docs" element={<DocsPage t={t} />} />
         </Routes>

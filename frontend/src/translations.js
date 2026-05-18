@@ -10,6 +10,7 @@ export const translations = {
     clear: "Vymazať pamäť",
     placeholder: "Sem napíšte Octave príkaz... (napr. a = 5 + 5)",
     output: "Výstup z Octave:",
+    run_simulation: "Spustiť simuláciu",
   },
   en: {
     title: "CAS & Simulations",
@@ -22,5 +23,6 @@ export const translations = {
     clear: "Clear Memory",
     placeholder: "Type Octave command here... (e.g., a = 5 + 5)",
     output: "Octave Output:",
+    run_simulation: "Run simulation",
   }
 };

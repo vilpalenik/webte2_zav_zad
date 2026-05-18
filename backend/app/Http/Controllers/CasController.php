@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\CasLog;
-use Response;
+use Illuminate\Support\Facades\Response;
 
 class CasController extends Controller
 {
@@ -23,7 +23,7 @@ class CasController extends Controller
         }
 
         $request->validate([
-            'command' => 'required|string',
+            'command' => 'required|string|max:10000',
             'session_id' => 'required|string'
         ]);
 
@@ -82,8 +82,12 @@ class CasController extends Controller
     }
 
     // 3. EXPORT DO CSV (Splnenie bodu 9 zo zadania)
-    public function exportCsv()
+    public function exportCsv(Request $request)
     {
+        if (!$this->checkAuth($request)) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
         $logs = CasLog::all();
         $csvFileName = 'cas_logs_' . date('Y-m-d_H-i-s') . '.csv';
 
