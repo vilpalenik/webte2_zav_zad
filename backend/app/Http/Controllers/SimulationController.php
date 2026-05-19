@@ -32,6 +32,7 @@ class SimulationController extends Controller
             ? $this->buildPendulumScript($r1, $r2)
             : $this->buildBallBeamScript($r1, $r2);
 
+        ignore_user_abort(false); // let PHP detect client disconnect during exec
         $tmpBase = tempnam(sys_get_temp_dir(), 'oct_');
         $tmpFile = $tmpBase . '.m';
         file_put_contents($tmpFile, $script);
@@ -40,6 +41,11 @@ class SimulationController extends Controller
 
         @unlink($tmpFile);
         @unlink($tmpBase);
+
+        // client navigated away while Octave was running — stop silently
+        if (connection_aborted()) {
+            return response()->json(['status' => 'aborted'], 200);
+        }
 
         if ($returnCode !== 0 || empty($output)) {
             return response()->json(['status' => 'error', 'message' => 'Simulation failed'], 500);
@@ -70,10 +76,10 @@ class SimulationController extends Controller
         B = [0;0;0;1]; C = [1 0 0 0]; D = [0];
         K = place(A,B,[-2+2i,-2-2i,-20,-80]);
         N = -inv(C*inv(A-B*K)*B);
-        sys = ss(A-B*K,B,C,D);
+        sys = ss(A-B*K, B*N, C, D);
         t = (0:0.02:5)';
-        [y1,t1,x1] = lsim(N*sys, {$r1}*ones(size(t)), t, [0;0;0;0]);
-        [y2,t2,x2] = lsim(N*sys, {$r2}*ones(size(t)), t, x1(end,:)');
+        [y1,t1,x1] = lsim(sys, {$r1}*ones(size(t)), t, [0;0;0;0]);
+        [y2,t2,x2] = lsim(sys, {$r2}*ones(size(t)), t, x1(end,:)');
         result.t = t1';
         result.y1 = y1';
         result.beam1 = x1(:,3)';

@@ -10,8 +10,8 @@ const DocsPage = ({ t }) => {
   useEffect(() => {
     axios.get('/api/docs/openapi')
       .then(res => setSpec(res.data))
-      .catch(() => setError('Nepodarilo sa načítať dokumentáciu.'));
-  }, []);
+      .catch(() => setError(t.docs_error));
+  }, [t]);
 
   const handleDownloadPdf = () => {
     window.open('/api/docs/print', '_blank');
@@ -23,18 +23,18 @@ const DocsPage = ({ t }) => {
         <h2 style={{ margin: 0 }}>{t.docs}</h2>
         <button onClick={handleDownloadPdf}
           style={{ padding: '8px 18px', backgroundColor: '#008CBA', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>
-          Stiahnuť PDF
+          {t.docs_download}
         </button>
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!spec && !error && <p>Načítavam...</p>}
+      {!spec && !error && <p>{t.docs_loading}</p>}
 
       {spec && (
         <>
           <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-            <strong>Verzia:</strong> {spec.info.version} &nbsp;|&nbsp;
-            <strong>Autentifikácia:</strong> header <code>X-API-KEY</code>
+            <strong>{t.docs_version}:</strong> {spec.info.version} &nbsp;|&nbsp;
+            <strong>{t.docs_auth}:</strong> header <code>X-API-KEY</code>
           </p>
 
           {Object.entries(spec.paths).map(([path, methods]) =>
@@ -58,7 +58,7 @@ const DocsPage = ({ t }) => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem' }}>
                       <thead>
                         <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={th}>Parameter</th><th style={th}>Typ</th><th style={th}>Popis</th><th style={th}>Povinný</th>
+                          <th style={th}>Parameter</th><th style={th}>Typ / Type</th><th style={th}>Popis / Description</th><th style={th}>*</th>
                         </tr>
                       </thead>
                       <tbody>
