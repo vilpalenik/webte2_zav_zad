@@ -77,7 +77,7 @@ class SimulationController extends Controller
         K = place(A,B,[-2+2i,-2-2i,-20,-80]);
         N = -inv(C*inv(A-B*K)*B);
         sys = ss(A-B*K, B*N, C, D);
-        t = (0:0.02:5)';
+        t = (0:0.01:5)';
         [y1,t1,x1] = lsim(sys, {$r1}*ones(size(t)), t, [0;0;0;0]);
         [y2,t2,x2] = lsim(sys, {$r2}*ones(size(t)), t, x1(end,:)');
         result.t = t1';

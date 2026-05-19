@@ -213,7 +213,27 @@ const SimulationPage = ({ simType, t }) => {
   const seriesRef  = useRef(null);
   const abortRef   = useRef(null); // AbortController for the in-flight simulation request
 
-  // log animation view once per page load (uses cookie)
+  // when simType changes (navigating between simulation pages), clear stale data + canvases
+  useEffect(() => {
+    if (rafRef.current)   cancelAnimationFrame(rafRef.current);
+    if (abortRef.current) abortRef.current.abort();
+    setSimData(null);
+    setRunPhase('');
+    setError('');
+    seriesRef.current = null;
+    labelRef.current  = '';
+
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+    if (graphRef.current) {
+      const ctx = graphRef.current.getContext('2d');
+      ctx.clearRect(0, 0, graphRef.current.width, graphRef.current.height);
+    }
+  }, [simType]);
+
+  // log animation view once per simType (uses cookie)
   useEffect(() => {
     const ctrl = new AbortController();
     axios.post('/api/animation/log', { type: simType, token: getOrCreateToken() },
@@ -231,7 +251,10 @@ const SimulationPage = ({ simType, t }) => {
 
   // pre-compute graph series whenever simData or language changes
   useEffect(() => {
-    if (!simData) { seriesRef.current = null; return; }
+    // guard: simData must exist and match the current simType
+    const valid = simData &&
+      (simType === 'pendulum' ? ('cart1' in simData) : ('y1' in simData));
+    if (!valid) { seriesRef.current = null; return; }
     const t1 = Array.from(simData.t);
     const offset = t1[t1.length - 1];
     const tCombined = [...t1, ...t1.map(v => v + offset)];
@@ -268,7 +291,9 @@ const SimulationPage = ({ simType, t }) => {
   };
 
   const animate = useCallback((timestamp) => {
-    if (!simData || !canvasRef.current || !graphRef.current) return;
+    const valid = simData &&
+      (simType === 'pendulum' ? ('cart1' in simData) : ('y1' in simData));
+    if (!valid || !canvasRef.current || !graphRef.current) return;
     if (!startRef.current) startRef.current = timestamp;
     // scale elapsed time so fast transients (beam angle) remain visible
     const elapsed = (timestamp - startRef.current) / 1000 * DEFAULTS[simType].speed;
