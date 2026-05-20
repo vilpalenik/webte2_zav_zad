@@ -1,20 +1,22 @@
-FROM php:8.3-fpm
+FROM php:8.3-fpm-alpine
 
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     octave \
     octave-control \
     libpng-dev \
-    libonig-dev \
+    oniguruma-dev \
     libxml2-dev \
     libzip-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
     zip \
     unzip \
     curl \
     git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
