@@ -64,7 +64,12 @@ export const translations = {
     docs_error: "Nepodarilo sa načítať dokumentáciu.",
     docs_version: "Verzia",
     docs_auth: "Autentifikácia",
+    docs_col_parameter: "Parameter",
+    docs_col_type: "Typ",
+    docs_col_description: "Popis",
+    docs_col_required: "Povinný",
     locale: "sk-SK",
+    lang: "sk",
   },
 
   en: {
@@ -132,6 +137,11 @@ export const translations = {
     docs_error: "Failed to load documentation.",
     docs_version: "Version",
     docs_auth: "Authentication",
+    docs_col_parameter: "Parameter",
+    docs_col_type: "Type",
+    docs_col_description: "Description",
+    docs_col_required: "Required",
     locale: "en-GB",
+    lang: "en",
   }
 };

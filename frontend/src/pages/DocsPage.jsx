@@ -11,7 +11,7 @@ const DocsPage = ({ t }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get('/api/docs/openapi')
+    axios.get(`/api/docs/openapi?lang=${t.lang}`)
       .then(res => setSpec(res.data))
       .catch(() => setError(t.docs_error));
   }, [t]);
@@ -59,7 +59,7 @@ const DocsPage = ({ t }) => {
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem', minWidth: 400 }}>
                         <thead>
                           <tr style={{ backgroundColor: '#f5f5f5' }}>
-                            <th style={th}>Parameter</th><th style={th}>Typ / Type</th><th style={th}>Popis / Description</th><th style={th}>*</th>
+                            <th style={th}>{t.docs_col_parameter}</th><th style={th}>{t.docs_col_type}</th><th style={th}>{t.docs_col_description}</th><th style={th}>{t.docs_col_required}</th>
                           </tr>
                         </thead>
                         <tbody>

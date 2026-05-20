@@ -4,14 +4,56 @@ namespace App\Http\Controllers;
 
 class DocsController extends Controller
 {
-    public function openapi()
+    public function openapi(\Illuminate\Http\Request $request)
     {
+        $en = $request->query('lang') === 'en';
+
+        $t = [
+            'api_desc'        => $en ? 'API for Octave web console and physics simulations.'
+                                     : 'API pre Octave webovú konzolu a fyzikálne simulácie.',
+            'exec_sum'        => $en ? 'Execute an Octave command'         : 'Spustí príkaz v Octave',
+            'exec_desc'       => $en ? 'Runs the given Octave command in the context of the session (variables are preserved).'
+                                     : 'Vykoná zadaný Octave príkaz v kontexte danej relácie (zachovanie premenných).',
+            'exec_200'        => $en ? 'Command executed successfully'     : 'Príkaz úspešne vykonaný',
+            'exec_422'        => $en ? 'Octave syntax error'               : 'Chyba v syntaxi Octave',
+            'clear_sum'       => $en ? 'Clear session memory'              : 'Vymaže pamäť relácie',
+            'clear_desc'      => $en ? 'Resets the command history for the session (variables are forgotten).'
+                                     : 'Resetuje históriu príkazov pre danú reláciu (premenné sa zabudnú).',
+            'clear_200'       => $en ? 'Memory cleared'                    : 'Pamäť vymazaná',
+            'export_sum'      => $en ? 'Export logs to CSV'                : 'Export logov do CSV',
+            'export_desc'     => $en ? 'Downloads all Octave command records as a CSV file with UTF-8 BOM (Excel compatible).'
+                                     : 'Stiahne všetky záznamy Octave príkazov ako CSV súbor s UTF-8 BOM (kompatibilné s Excelom).',
+            'export_200'      => $en ? 'CSV file'                          : 'CSV súbor',
+            'sim_sum'         => $en ? 'Run physics simulation'            : 'Spustí fyzikálnu simuláciu',
+            'sim_desc'        => $en ? 'Computes the time response of a simulation (pendulum or ball-beam) using an LQR controller in Octave and returns data for animation.'
+                                     : 'Vypočíta časový priebeh simulácie (kyvadlo alebo gulička) pomocou LQR regulátora v Octave a vráti dáta pre animáciu.',
+            'sim_r1'          => $en ? 'Target position (run 1)'           : 'Cieľová pozícia (1. beh)',
+            'sim_r2'          => $en ? 'Target position (run 2)'           : 'Cieľová pozícia (2. beh)',
+            'sim_200'         => $en ? 'Time series for animation and graph' : 'Časové rady pre animáciu a graf',
+            'sim_500'         => $en ? 'Simulation failed'                 : 'Simulácia zlyhala',
+            'log_sum'         => $en ? 'Log animation launch'              : 'Zaloguje spustenie animácie',
+            'log_desc'        => $en ? 'Records an animation launch including user geolocation. A 10-minute cooldown applies per token+type.'
+                                     : 'Zaznamená spustenie animácie vrátane geolokácie používateľa. Platí 10-minútový cooldown na token+typ.',
+            'log_token'       => $en ? 'Anonymous user token from cookie user_token'
+                                     : 'Anonymný token používateľa z cookie user_token',
+            'log_200'         => $en ? 'Logged or skipped (cooldown)'      : 'Log zaznamenaný alebo preskočený (cooldown)',
+            'stats_sum'       => $en ? 'Animation statistics'              : 'Štatistiky animácií',
+            'stats_desc'      => $en ? 'Returns the run count and last location for each animation type.'
+                                     : 'Vráti počet spustení a poslednú lokalitu pre každý typ animácie.',
+            'stats_200'       => $en ? 'Aggregated statistics'             : 'Agregované štatistiky',
+            'detail_sum'      => $en ? 'Animation log detail'              : 'Detail logov animácie',
+            'detail_desc'     => $en ? 'Returns the full list of runs for the given animation type with timestamps and geolocation.'
+                                     : 'Vráti kompletný zoznam spustení pre daný typ animácie s časovou pečiatkou a geolokáciou.',
+            'detail_200'      => $en ? 'List of records'                   : 'Zoznam záznamov',
+            'unauthorized'    => $en ? 'Invalid or missing API key'        : 'Nesprávny alebo chýbajúci API kľúč',
+        ];
+
         $spec = [
             'openapi' => '3.0.3',
             'info'    => [
                 'title'       => 'CAS & Simulations API',
                 'version'     => '1.0.0',
-                'description' => 'API pre Octave webovú konzolu a fyzikálne simulácie.',
+                'description' => $t['api_desc'],
             ],
             'components' => [
                 'securitySchemes' => [
@@ -22,87 +64,87 @@ class DocsController extends Controller
             'paths'    => [
                 '/api/cas/execute' => [
                     'post' => [
-                        'summary'     => 'Spustí príkaz v Octave',
-                        'description' => 'Vykoná zadaný Octave príkaz v kontexte danej relácie (zachovanie premenných).',
+                        'summary'     => $t['exec_sum'],
+                        'description' => $t['exec_desc'],
                         'requestBody' => [
                             'required' => true,
                             'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['command', 'session_id'], 'properties' => ['command' => ['type' => 'string', 'maxLength' => 10000], 'session_id' => ['type' => 'string']]]]],
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Príkaz úspešne vykonaný', 'content' => ['application/json' => ['schema' => ['type' => 'object', 'properties' => ['status' => ['type' => 'string'], 'output' => ['type' => 'string']]]]]],
-                            '401' => ['description' => 'Nesprávny alebo chýbajúci API kľúč'],
-                            '422' => ['description' => 'Chyba v syntaxi Octave'],
+                            '200' => ['description' => $t['exec_200'], 'content' => ['application/json' => ['schema' => ['type' => 'object', 'properties' => ['status' => ['type' => 'string'], 'output' => ['type' => 'string']]]]]],
+                            '401' => ['description' => $t['unauthorized']],
+                            '422' => ['description' => $t['exec_422']],
                         ],
                     ],
                 ],
                 '/api/cas/clear' => [
                     'post' => [
-                        'summary'     => 'Vymaže pamäť relácie',
-                        'description' => 'Resetuje históriu príkazov pre danú reláciu (premenné sa zabudnú).',
+                        'summary'     => $t['clear_sum'],
+                        'description' => $t['clear_desc'],
                         'requestBody' => [
                             'required' => true,
                             'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['session_id'], 'properties' => ['session_id' => ['type' => 'string']]]]],
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Pamäť vymazaná'],
-                            '401' => ['description' => 'Nesprávny alebo chýbajúci API kľúč'],
+                            '200' => ['description' => $t['clear_200']],
+                            '401' => ['description' => $t['unauthorized']],
                         ],
                     ],
                 ],
                 '/api/cas/export' => [
                     'get' => [
-                        'summary'     => 'Export logov do CSV',
-                        'description' => 'Stiahne všetky záznamy Octave príkazov ako CSV súbor s UTF-8 BOM (kompatibilné s Excelom).',
+                        'summary'     => $t['export_sum'],
+                        'description' => $t['export_desc'],
                         'responses'   => [
-                            '200' => ['description' => 'CSV súbor', 'content' => ['text/csv' => ['schema' => ['type' => 'string', 'format' => 'binary']]]],
-                            '401' => ['description' => 'Nesprávny alebo chýbajúci API kľúč'],
+                            '200' => ['description' => $t['export_200'], 'content' => ['text/csv' => ['schema' => ['type' => 'string', 'format' => 'binary']]]],
+                            '401' => ['description' => $t['unauthorized']],
                         ],
                     ],
                 ],
                 '/api/simulation/run' => [
                     'post' => [
-                        'summary'     => 'Spustí fyzikálnu simuláciu',
-                        'description' => 'Vypočíta časový priebeh simulácie (kyvadlo alebo gulička) pomocou LQR regulátora v Octave a vráti dáta pre animáciu.',
+                        'summary'     => $t['sim_sum'],
+                        'description' => $t['sim_desc'],
                         'requestBody' => [
                             'required' => true,
-                            'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['type', 'r1', 'r2'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['pendulum', 'ball-beam']], 'r1' => ['type' => 'number', 'description' => 'Cieľová pozícia (1. beh)'], 'r2' => ['type' => 'number', 'description' => 'Cieľová pozícia (2. beh)']]]]],
+                            'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['type', 'r1', 'r2'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['pendulum', 'ball-beam']], 'r1' => ['type' => 'number', 'description' => $t['sim_r1']], 'r2' => ['type' => 'number', 'description' => $t['sim_r2']]]]]],
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Časové rady pre animáciu a graf'],
-                            '401' => ['description' => 'Nesprávny alebo chýbajúci API kľúč'],
-                            '500' => ['description' => 'Simulácia zlyhala'],
+                            '200' => ['description' => $t['sim_200']],
+                            '401' => ['description' => $t['unauthorized']],
+                            '500' => ['description' => $t['sim_500']],
                         ],
                     ],
                 ],
                 '/api/animation/log' => [
                     'post' => [
-                        'summary'     => 'Zaloguje spustenie animácie',
-                        'description' => 'Zaznamená spustenie animácie vrátane geolokácie používateľa. Platí 10-minútový cooldown na token+typ.',
+                        'summary'     => $t['log_sum'],
+                        'description' => $t['log_desc'],
                         'security'    => [],
                         'requestBody' => [
                             'required' => true,
-                            'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['type', 'token'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['pendulum', 'ball-beam']], 'token' => ['type' => 'string', 'description' => 'Anonymný token používateľa z cookie user_token']]]]],
+                            'content'  => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['type', 'token'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['pendulum', 'ball-beam']], 'token' => ['type' => 'string', 'description' => $t['log_token']]]]]],
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Log zaznamenaný alebo preskočený (cooldown)'],
+                            '200' => ['description' => $t['log_200']],
                         ],
                     ],
                 ],
                 '/api/animation/stats' => [
                     'get' => [
-                        'summary'     => 'Štatistiky animácií',
-                        'description' => 'Vráti počet spustení a poslednú lokalitu pre každý typ animácie.',
+                        'summary'     => $t['stats_sum'],
+                        'description' => $t['stats_desc'],
                         'security'    => [],
-                        'responses'   => ['200' => ['description' => 'Agregované štatistiky']],
+                        'responses'   => ['200' => ['description' => $t['stats_200']]],
                     ],
                 ],
                 '/api/animation/detail/{type}' => [
                     'get' => [
-                        'summary'     => 'Detail logov animácie',
-                        'description' => 'Vráti kompletný zoznam spustení pre daný typ animácie s časovou pečiatkou a geolokáciou.',
+                        'summary'     => $t['detail_sum'],
+                        'description' => $t['detail_desc'],
                         'security'    => [],
                         'parameters'  => [['name' => 'type', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string', 'enum' => ['pendulum', 'ball-beam']]]],
-                        'responses'   => ['200' => ['description' => 'Zoznam záznamov']],
+                        'responses'   => ['200' => ['description' => $t['detail_200']]],
                     ],
                 ],
             ],
