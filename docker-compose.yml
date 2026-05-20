@@ -15,7 +15,7 @@ services:
     depends_on:
       - mariadb
   mariadb:
-    image: mariadb:lts-alpine
+    image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: webte2
