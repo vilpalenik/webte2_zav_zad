@@ -1,0 +1,161 @@
+/* ── base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #222;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 14px;
+  padding: 2px 6px;
+  background: #f4f3ec;
+  border-radius: 4px;
+}
+
+/* ── page wrapper ─────────────────────────────────────────────────────────── */
+.page {
+  padding: 1.5rem 2rem;
+  max-width: 1040px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── navbar ──────────────────────────────────────────────────────────────── */
+.navbar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  background: #282c34;
+  color: white;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  color: white;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.navbar-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.navbar-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+}
+
+/* ── simulation grid ─────────────────────────────────────────────────────── */
+.sim-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ── console header ──────────────────────────────────────────────────────── */
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── scrollable table ────────────────────────────────────────────────────── */
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── table cell styles ───────────────────────────────────────────────────── */
+.cell    { padding: 12px;     border: 1px solid #ddd; }
+.cell-sm { padding: 6px 10px; border: 1px solid #ddd; text-align: left; }
+
+/* ── buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+.btn-green { background: #4CAF50; color: white; padding: 10px 20px; }
+.btn-red   { background: #f44336; color: white; padding: 10px 20px; }
+.btn-blue  { background: #008CBA; color: white; padding: 8px 16px;  }
+
+/* ══ mobile ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page { padding: 1rem; }
+
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #282c34;
+    padding: 0.5rem 1.25rem 1rem;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .navbar-links.open { display: flex; }
+  .navbar-links a {
+    padding: 0.65rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    font-size: 1rem;
+  }
+  .navbar-hamburger { display: flex; }
+
+  .sim-grid { grid-template-columns: 1fr; }
+
+  .navbar-brand { font-size: 0.95rem; }
+}

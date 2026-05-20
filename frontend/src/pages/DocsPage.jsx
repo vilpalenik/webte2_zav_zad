@@ -3,6 +3,9 @@ import axios from 'axios';
 
 const METHOD_COLORS = { get: '#61affe', post: '#49cc90', put: '#fca130', delete: '#f93e3e' };
 
+const th = { padding: '6px 10px', border: '1px solid #ddd', textAlign: 'left' };
+const td = { padding: '6px 10px', border: '1px solid #ddd' };
+
 const DocsPage = ({ t }) => {
   const [spec, setSpec] = useState(null);
   const [error, setError] = useState('');
@@ -18,13 +21,10 @@ const DocsPage = ({ t }) => {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '860px', margin: '0 auto' }}>
+    <div className="page" style={{ maxWidth: '860px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0 }}>{t.docs}</h2>
-        <button onClick={handleDownloadPdf}
-          style={{ padding: '8px 18px', backgroundColor: '#008CBA', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>
-          {t.docs_download}
-        </button>
+        <button className="btn btn-blue" onClick={handleDownloadPdf}>{t.docs_download}</button>
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -55,23 +55,25 @@ const DocsPage = ({ t }) => {
                   const req    = schema?.required ?? [];
                   if (!Object.keys(props).length) return null;
                   return (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={th}>Parameter</th><th style={th}>Typ / Type</th><th style={th}>Popis / Description</th><th style={th}>*</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(props).map(([name, p]) => (
-                          <tr key={name}>
-                            <td style={td}><code>{name}</code></td>
-                            <td style={td}>{p.enum ? p.enum.join(' | ') : p.type}</td>
-                            <td style={td}>{p.description ?? '—'}</td>
-                            <td style={td}>{req.includes(name) ? '✓' : ''}</td>
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.85rem', minWidth: 400 }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f5f5f5' }}>
+                            <th style={th}>Parameter</th><th style={th}>Typ / Type</th><th style={th}>Popis / Description</th><th style={th}>*</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {Object.entries(props).map(([name, p]) => (
+                            <tr key={name}>
+                              <td style={td}><code>{name}</code></td>
+                              <td style={td}>{p.enum ? p.enum.join(' | ') : p.type}</td>
+                              <td style={td}>{p.description ?? '—'}</td>
+                              <td style={td}>{req.includes(name) ? '✓' : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   );
                 })()}
               </div>
@@ -83,7 +85,5 @@ const DocsPage = ({ t }) => {
   );
 };
 
-const th = { padding: '6px 10px', border: '1px solid #ddd', textAlign: 'left' };
-const td = { padding: '6px 10px', border: '1px solid #ddd' };
 
 export default DocsPage;

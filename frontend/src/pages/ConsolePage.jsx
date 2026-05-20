@@ -71,15 +71,10 @@ const ConsolePage = ({ t }) => {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="page">
+      <div className="console-header">
         <h2>{t.console}</h2>
-        <button
-          onClick={handleDownloadCsv}
-          style={{ padding: '8px 15px', backgroundColor: '#008CBA', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          {t.export_csv}
-        </button>
+        <button className="btn btn-blue" onClick={handleDownloadCsv}>{t.export_csv}</button>
       </div>
 
       <p style={{ fontSize: '0.9rem', color: '#666' }}>{t.session_id}: <code>{sessionId}</code></p>
@@ -96,19 +91,10 @@ const ConsolePage = ({ t }) => {
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button
-          onClick={handleExecute}
-          disabled={loading}
-          style={{ padding: '10px 20px', cursor: loading ? 'not-allowed' : 'pointer', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-        >
+        <button className="btn btn-green" onClick={handleExecute} disabled={loading}>
           {loading ? t.computing : t.execute}
         </button>
-        <button
-          onClick={handleClearMemory}
-          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-        >
-          {t.clear}
-        </button>
+        <button className="btn btn-red" onClick={handleClearMemory}>{t.clear}</button>
       </div>
 
       <h3>{t.output}</h3>

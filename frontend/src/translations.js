@@ -64,6 +64,7 @@ export const translations = {
     docs_error: "Nepodarilo sa načítať dokumentáciu.",
     docs_version: "Verzia",
     docs_auth: "Autentifikácia",
+    locale: "sk-SK",
   },
 
   en: {
@@ -131,5 +132,6 @@ export const translations = {
     docs_error: "Failed to load documentation.",
     docs_version: "Version",
     docs_auth: "Authentication",
+    locale: "en-GB",
   }
 };
