@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 class DocsController extends Controller
 {
     public function openapi(\Illuminate\Http\Request $request)
@@ -310,12 +313,12 @@ class DocsController extends Controller
 
         $html = $this->buildPdfHtml($en, $cooldown);
 
-        $options = new \Dompdf\Options();
+        $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', false);
-        $options->set('defaultFont', 'Helvetica');
+        $options->set('defaultFont', 'DejaVu Sans');
 
-        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -323,7 +326,7 @@ class DocsController extends Controller
         // Add header and page numbers via canvas (runs on every page)
         $canvas      = $dompdf->getCanvas();
         $fontMetrics = $dompdf->getFontMetrics();
-        $font        = $fontMetrics->get_font('Helvetica', 'normal');
+        $font        = $fontMetrics->get_font('DejaVu Sans', 'normal');
         $w           = $canvas->get_width();
         $h           = $canvas->get_height();
 
@@ -443,7 +446,7 @@ class DocsController extends Controller
           <meta charset="UTF-8">
           <style>
             @page { size: A4; margin: 45px 40px 50px 40px; }
-            body  { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #222; }
+            body  { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #222; }
             h1    { font-size: 15px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 4px; }
             p     { margin: 3px 0; }
             .meta { font-size: 9px; color: #555; margin-bottom: 12px; }
