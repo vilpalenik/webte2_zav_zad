@@ -112,13 +112,12 @@ Všetky `/api/*` endpointy vyžadujú hlavičku `X-API-KEY: <hodnota z .env>`, p
 | POST | `/api/cas/execute` | Vykoná Octave príkaz | ✓ |
 | POST | `/api/cas/clear` | Vymaže pamäť relácie | ✓ |
 | GET | `/api/cas/export` | Export logov do CSV | ✓ |
-| POST | `/api/simulation/run` | Spustí LQR simuláciu | ✓ |
-| POST | `/api/animation/log` | Zaloguje spustenie animácie | — |
+| POST | `/api/simulation/run` | Spustí simuláciu | ✓ |
+| POST | `/api/animation/log` | Zaloguje spustenie simulácie | — |
 | GET | `/api/animation/stats` | Štatistiky animácií | — |
-| GET | `/api/animation/detail/{type}` | Detail logov animácie | — |
+| GET | `/api/animation/detail/{type}` | Detail logov simulácie | — |
 | GET | `/api/docs/openapi` | OpenAPI JSON špecifikácia | — |
 | GET | `/api/docs/pdf` | PDF dokumentácia | — |
-| GET | `/api/docs/print` | HTML pre tlač | — |
 
 ---
 
@@ -136,7 +135,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 ### Konfigurácia nginx na serveri
 
-Pridaný `location /` blok do existujúceho súboru `/etc/nginx/sites-available/node75.webte.fei.stuba.sk`:
+Pridaný `location /` blok do existujúceho súboru konfiguračného súboru:
 
 ```nginx
 location / {
@@ -198,13 +197,6 @@ VITE_API_KEY=moje_supertajne_api_heslo_123
 
 ## 8. Nasadenie na server (deployment)
 
-### Požiadavky
-
-- Ubuntu 20.04+ / Debian 11+
-- Prístup cez SSH
-- Sudo práva
-- Port 80 a 443 dostupné (alebo iné podľa konfigurácie)
-
 ### Krok 1 — Inštalácia Dockeru
 
 ```bash
@@ -225,17 +217,24 @@ docker --version          # Docker version 29.x.x
 docker-compose version    # Docker Compose version v2.27.1
 ```
 
-### Krok 2 — Klonovanie repozitára
+### Krok 2 — Klon repozitára
 
 ```bash
 git clone https://github.com/vilpalenik/webte2_zav_zad
 ```
 
-### Krok 3 — Vytvorenie `.env` súboru
+### Krok 3 — Vytvorenie `.env` súborov
 
+Backend:
 ```bash
 cp backend/.env.example backend/.env
 nano backend/.env
+```
+
+frontend:
+```bash
+cp backend/.env.example backend/.env
+nano frontend/.env
 ```
 
 Vyplniť env podľa sekcie 7:
@@ -253,11 +252,11 @@ docker-compose ps
 
 Očakávaný výstup — všetky 4 služby v stave `running`:
 ```
-NAME                        STATUS
-webte2_zav_zad-nginx-1      running
-webte2_zav_zad-php-1        running
-webte2_zav_zad-mariadb-1    running
-webte2_zav_zad-phpmyadmin-1 running
+NAME                            STATUS
+webte2_zav_zad-mariadb-1        Up x hours
+webte2_zav_zad-nginx-1          Up x hours
+webte2_zav_zad-php-1            Up x hours
+webte2_zav_zad-phpmyadmin-1     Up x hours
 ```
 
 ### Krok 5 — Inštalácia PHP závislostí
@@ -284,9 +283,9 @@ docker run --rm \
   sh -c "npm ci && npm run build"
 ```
 
-### Krok 8 — Konfigurácia serverového nginx (proxy)
+### Krok 8 — Nginx konfigurácia
 
-Do existujúceho `server { listen 443 ssl; }` bloku v `/etc/nginx/sites-available/<hostname>` pridať:
+Do nginx konfiguračného súboru treba pridať pridať `location /` blok:
 
 ```nginx
 location / {
@@ -382,7 +381,6 @@ Dočasne pridať do `docker-compose.yml`:
 - Všetky `/api/*` endpointy vyžadujú `X-API-KEY` hlavičku (definovanú v `.env`)
 - API kľúč je uložený v `.env` súbore, ktorý nie je súčasťou repozitára
 - `APP_DEBUG=false` v produkčnom prostredí
-- Maximálna dĺžka príkazu: 10 000 znakov
 
 ---
 
