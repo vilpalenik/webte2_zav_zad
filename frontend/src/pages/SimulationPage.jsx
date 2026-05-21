@@ -135,6 +135,11 @@ const SimulationPage = ({ simType, t }) => {
     if (elapsed < T * 2) {
       rafRef.current = requestAnimationFrame(animate);
     } else {
+      // draw final frame at 100% before stopping
+      if (seriesRef.current && graphRef.current) {
+        const g = graphRef.current;
+        drawGraph(g.getContext('2d'), g.width, g.height, seriesRef.current, seriesRef.current[0].values.length - 1);
+      }
       setRunPhase('done');
     }
   }, [simData, simType]);
