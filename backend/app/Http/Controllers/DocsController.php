@@ -301,4 +301,171 @@ class DocsController extends Controller
 
         return response($html)->header('Content-Type', 'text/html; charset=utf-8');
     }
+
+    public function pdf(\Illuminate\Http\Request $request)
+    {
+        $en       = $request->query('lang') === 'en';
+        $cooldown = env('ANIMATION_COOLDOWN_MINUTES', 10);
+        $title    = 'CAS & Simulations API — Dokumentácia';
+
+        $html = $this->buildPdfHtml($en, $cooldown);
+
+        $options = new \Dompdf\Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', false);
+        $options->set('defaultFont', 'Helvetica');
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Add header and page numbers via canvas (runs on every page)
+        $canvas      = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();
+        $font        = $fontMetrics->get_font('Helvetica', 'normal');
+        $w           = $canvas->get_width();
+        $h           = $canvas->get_height();
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas) use ($font, $w, $h, $title) {
+            // Header: document name + separator line
+            $canvas->text(40, 14, $title, $font, 7, [0.3, 0.3, 0.3]);
+            $canvas->line(40, 26, $w - 40, 26, [0.75, 0.75, 0.75], 0.5);
+            // Footer: separator line + "page / total"
+            $canvas->line(40, $h - 32, $w - 40, $h - 32, [0.75, 0.75, 0.75], 0.5);
+            $label = "$pageNumber / $pageCount";
+            $canvas->text($w / 2 - 14, $h - 22, $label, $font, 9, [0.2, 0.2, 0.2]);
+        });
+
+        $output = $dompdf->output();
+
+        return response($output, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="api-documentation.pdf"',
+            'Content-Length'      => strlen($output),
+        ]);
+    }
+
+    private function buildPdfHtml(bool $en, int $cooldown): string
+    {
+        $h = fn(string $s) => htmlspecialchars($s, ENT_QUOTES);
+
+        $endpoints = [
+            ['POST', '/api/cas/execute',
+                $en ? 'Execute an Octave command' : 'Spustí príkaz v Octave',
+                $en ? 'Runs the Octave command in the session context (variables are preserved for 60 minutes).'
+                    : 'Vykoná Octave príkaz v kontexte relácie (premenné sa uchovávajú 60 minút).',
+                [['command','string', $en?'Octave command (max 10 000 chars)':'Octave príkaz (max 10 000 znakov)', true],
+                 ['session_id','string', $en?'Session identifier':'Identifikátor relácie', true]],
+                true],
+            ['POST', '/api/cas/clear',
+                $en ? 'Clear session memory' : 'Vymaže pamäť relácie',
+                $en ? 'Resets the command history for the session (variables are forgotten).'
+                    : 'Resetuje históriu príkazov pre reláciu (premenné sa zabudnú).',
+                [['session_id','string', $en?'Session identifier':'Identifikátor relácie', true]],
+                true],
+            ['GET', '/api/cas/export',
+                $en ? 'Export logs to CSV' : 'Export logov do CSV',
+                $en ? 'Downloads all Octave command records as a UTF-8 BOM CSV file (Excel compatible).'
+                    : 'Stiahne záznamy príkazov ako CSV súbor s UTF-8 BOM (kompatibilné s Excelom).',
+                [], true],
+            ['POST', '/api/simulation/run',
+                $en ? 'Run physics simulation' : 'Spustí fyzikálnu simuláciu',
+                $en ? 'Computes the LQR simulation (pendulum or ball-beam) and returns time-series data for animation.'
+                    : 'Vypočíta LQR simuláciu (kyvadlo alebo gulička) a vráti časové rady pre animáciu.',
+                [['type','string (pendulum | ball-beam)', $en?'Simulation type':'Typ simulácie', true],
+                 ['r1','number', $en?'Target position run 1 (−2 to 2)':'Cieľová pozícia beh 1 (−2 až 2)', true],
+                 ['r2','number', $en?'Target position run 2 (−2 to 2)':'Cieľová pozícia beh 2 (−2 až 2)', true]],
+                true],
+            ['POST', '/api/animation/log',
+                $en ? 'Log animation launch' : 'Zaloguje spustenie animácie',
+                $en ? "Records an animation launch with IP geolocation. Cooldown: {$cooldown} min per token+type."
+                    : "Zaznamená spustenie animácie s geolokáciou. Cooldown: {$cooldown} min na token+typ.",
+                [['type','string (pendulum | ball-beam)', $en?'Animation type':'Typ animácie', true],
+                 ['token','string', $en?'Anonymous user token from cookie':'Anonymný token z cookie user_token', true]],
+                false],
+            ['GET', '/api/animation/stats',
+                $en ? 'Animation statistics' : 'Štatistiky animácií',
+                $en ? 'Returns run count and last location per animation type.'
+                    : 'Vráti počet spustení a poslednú lokalitu pre každý typ animácie.',
+                [], false],
+            ['GET', '/api/animation/detail/{type}',
+                $en ? 'Animation log detail' : 'Detail logov animácie',
+                $en ? 'Returns the full run log for the given animation type (timestamp, city, country).'
+                    : 'Vráti kompletný log spustení pre daný typ animácie (čas, mesto, štát).',
+                [], false],
+            ['GET', '/api/docs/openapi',
+                $en ? 'OpenAPI specification' : 'OpenAPI špecifikácia',
+                $en ? 'Returns the OpenAPI 3.0 spec as JSON. Accepts ?lang=sk|en.'
+                    : 'Vráti OpenAPI 3.0 špecifikáciu ako JSON. Podporuje ?lang=sk|en.',
+                [], false],
+        ];
+
+        $authLabel = $en ? 'No API key required.' : 'Nevyžaduje API kľúč.';
+        $paramH    = $en ? 'Parameter' : 'Parameter';
+        $typeH     = $en ? 'Type'      : 'Typ';
+        $descH     = $en ? 'Description' : 'Popis';
+        $reqH      = $en ? 'Required'  : 'Povinný';
+        $authHeader= $en ? 'Authentication: header <b>X-API-KEY</b> required on all marked endpoints.'
+                         : 'Autentifikácia: header <b>X-API-KEY</b> vyžadovaný na označených endpointoch.';
+
+        $rows = '';
+        foreach ($endpoints as [$method, $path, $summary, $desc, $params, $requiresAuth]) {
+            $methodColor = $method === 'POST' ? '#49cc90' : '#61affe';
+            $authNote    = $requiresAuth ? '' : "<p class='auth'>{$authLabel}</p>";
+            $tableHtml   = '';
+            if ($params) {
+                $tableHtml .= "<table><tr><th>{$paramH}</th><th>{$typeH}</th><th>{$descH}</th><th>{$reqH}</th></tr>";
+                foreach ($params as [$pName, $pType, $pDesc, $pReq]) {
+                    $req = $pReq ? '✓' : '';
+                    $tableHtml .= "<tr><td><code>{$h($pName)}</code></td><td>{$h($pType)}</td><td>{$h($pDesc)}</td><td>{$req}</td></tr>";
+                }
+                $tableHtml .= '</table>';
+            }
+            $rows .= <<<ROW
+            <div class="ep">
+              <div class="head">
+                <span class="method" style="background:{$methodColor}">{$method}</span>
+                <code class="path">{$h($path)}</code>
+              </div>
+              <p class="sum">{$h($summary)}</p>
+              <p class="desc">{$h($desc)}</p>
+              {$authNote}
+              {$tableHtml}
+            </div>
+            ROW;
+        }
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            @page { size: A4; margin: 45px 40px 50px 40px; }
+            body  { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #222; }
+            h1    { font-size: 15px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 4px; }
+            p     { margin: 3px 0; }
+            .meta { font-size: 9px; color: #555; margin-bottom: 12px; }
+            .ep   { border: 1px solid #ddd; padding: 8px 10px; margin-bottom: 8px; page-break-inside: avoid; }
+            .head { margin-bottom: 4px; }
+            .method { display: inline; padding: 2px 7px; font-size: 8px; font-weight: bold; color: white; border-radius: 3px; }
+            .path { font-size: 10px; font-weight: bold; margin-left: 6px; }
+            .sum  { font-weight: bold; font-size: 10px; margin: 3px 0 2px; }
+            .desc { font-size: 9px; color: #444; margin-bottom: 3px; }
+            .auth { font-size: 8px; color: #888; margin: 2px 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 8.5px; }
+            th    { background: #f5f5f5; padding: 3px 6px; border: 1px solid #ddd; text-align: left; }
+            td    { padding: 3px 6px; border: 1px solid #ddd; }
+            code  { font-family: monospace; }
+          </style>
+        </head>
+        <body>
+          <h1>CAS &amp; Simulations API — Dokumentácia</h1>
+          <p class="meta">Version: 1.0.0 &nbsp;|&nbsp; {$authHeader}</p>
+          {$rows}
+        </body>
+        </html>
+        HTML;
+    }
 }

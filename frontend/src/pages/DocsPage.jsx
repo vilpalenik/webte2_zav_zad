@@ -17,7 +17,7 @@ const DocsPage = ({ t }) => {
   }, [t]);
 
   const handleDownloadPdf = () => {
-    window.open('/api/docs/print', '_blank');
+    window.location.href = `/api/docs/pdf?lang=${t.lang}`;
   };
 
   return (

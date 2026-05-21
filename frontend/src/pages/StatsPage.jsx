@@ -88,7 +88,7 @@ const StatsPage = ({ t }) => {
                                   {detail.rows.map(r => (
                                     <tr key={r.id}>
                                       <td className="cell-sm">{new Date(r.created_at).toLocaleString(t.locale)}</td>
-                                      <td className="cell-sm"><code>{r.user_token}</code></td>
+                                      <td className="cell-sm"><code>{r.user_token.slice(0, 8)}…</code></td>
                                       <td className="cell-sm">{r.city ?? '—'}</td>
                                       <td className="cell-sm">{r.country ?? '—'}</td>
                                     </tr>

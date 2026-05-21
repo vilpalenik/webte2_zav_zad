@@ -18,3 +18,4 @@ Route::get('/animation/detail/{type}', [AnimationController::class, 'detail']);
 
 Route::get('/docs/openapi', [DocsController::class, 'openapi']);
 Route::get('/docs/print',   [DocsController::class, 'printPage']);
+Route::get('/docs/pdf',     [DocsController::class, 'pdf']);
